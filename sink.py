@@ -3,9 +3,7 @@
 import dropbox
 import shell
 import argparse
-
-# remember to remove this when pushing to github!
-token = "token"
+from oauth import OAUTH_TOKEN
 
 def list():
     for f in dropbox.files_list_folder('').entries:
@@ -20,7 +18,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        dropbox = dropbox.Dropbox(token)
+        dropbox = dropbox.Dropbox(OAUTH_TOKEN)
     except:
         print("Malformed OAuth 2 access token!")
 
