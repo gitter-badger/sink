@@ -35,11 +35,11 @@ class Sink(object):
     def ls(self):
         parser = argparse.ArgumentParser(
                 description="List files in the current directory")
-        parser.add_argument('dir', nargs='?')
+        parser.add_argument("dir", nargs="?")
         args = parser.parse_args(sys.argv[2:])
 
         if args.dir == None: args.dir = self.curdir
-
+        if not args.dir.startswith("/"): args.dir = "/" + args.dir
         if args.dir == "/": args.dir = ""
 
         for f in self.dropbox.files_list_folder(args.dir).entries:
@@ -48,7 +48,7 @@ class Sink(object):
     def cd(self):
         parser = argparse.ArgumentParser(
                 description="Change the directory")
-        parser.add_argument('dir', nargs='?')
+        parser.add_argument("dir", nargs="?")
         args = parser.parse_args(sys.argv[2:])
 
         if args.dir == None: args.dir = "/"
