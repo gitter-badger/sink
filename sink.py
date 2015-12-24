@@ -4,7 +4,9 @@ import dropbox
 import sys
 import shell as sh
 import argparse
+import util
 from oauth import OAUTH_TOKEN
+from termcolor import colored as coloured
 
 class Sink(object):
     SINK_DIR = "SINK_DIR"
@@ -70,7 +72,10 @@ class Sink(object):
         if args.dir == "/": args.dir = ""
 
         for f in self.dropbox.files_list_folder(args.dir).entries:
-            print(f.name)
+            if util.is_file(f):
+                print(coloured(f.name, 'white'))
+            else:
+                print(coloured(f.name, 'yellow'))
 
     def cd(self):
         parser = argparse.ArgumentParser(

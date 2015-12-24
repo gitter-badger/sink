@@ -11,6 +11,7 @@ setup(
         'dropbox',
         'shell',
         'argparse',
-        'sys'],
+        'sys',
+        'termcolor'],
     url="https://github.com/kyle-verhoog/sink"
     )
