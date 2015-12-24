@@ -8,6 +8,11 @@ import util
 from oauth import OAUTH_TOKEN
 from termcolor import colored as coloured
 
+from prompt_toolkit import prompt
+from prompt_toolkit.contrib.completers import WordCompleter as word_completer
+from prompt_toolkit.history import FileHistory as file_history
+
+
 class Sink(object):
     SINK_DIR = "SINK_DIR"
 
@@ -34,8 +39,7 @@ class Sink(object):
 
     def init_config(self):
         self.conf_file = open(sh.join_paths(sh.get_home_dir(),'.sink'), "r+")
-        self.curdir = "/"
-        self.curdir = self.conf_file.readline().rstrip()
+        self.curdir = self.__sanitize_dir(self.conf_file.readline().rstrip())
         #self.curdir = sh.get_var(Sink.SINK_DIR, self.curdir)
         self.conf_file.close()
 
@@ -62,6 +66,15 @@ class Sink(object):
         getattr(self, args.command)()
         self.unload()
 
+    def __sanitize_dir(self, dir):
+        # dropbox api does not like '/' refering to root dir
+        if dir == "/" or dir == "":
+            return ""
+
+        if not dir.startswith("/"):
+            return "/" + dir
+
+
     def ls(self):
         parser = argparse.ArgumentParser(
                 description="List files in the specified directory")
@@ -77,12 +90,16 @@ class Sink(object):
             else:
                 print(coloured(f.name, 'yellow'))
 
+    def generate_completer(self):
+        """Generates the autocompletion listing"""
+        return word_completer(list(map(lambda x: x.name, self.dropbox.files_list_folder(self.curdir).entries)))
+
     def cd(self):
         parser = argparse.ArgumentParser(
                 description="Change the directory")
         parser.add_argument("dir", nargs="?", default="/")
         args = parser.parse_args(self.args[1:])
-        self.curdir = args.dir
+        self.curdir = self.__sanitize_dir(args.dir)
 
     def repl(self):
         PROMPT = self.dropbox.users_get_current_account().email + " > "
@@ -91,7 +108,12 @@ class Sink(object):
         parser.add_argument("command", help="subcommand")
 
         while True:
-            self.args = input(PROMPT).split(' ')
+            self.args = prompt(
+                    PROMPT,
+                    vi_mode=True,
+                    completer=self.generate_completer(),
+                    history=file_history(sh.join_paths(sh.get_home_dir(), '.sinkhist'))
+                    ).split(' ')
             args = parser.parse_args(self.args[0:1])
             if not hasattr(self, args.command):
                 print("Command not found")

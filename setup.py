@@ -12,6 +12,7 @@ setup(
         'shell',
         'argparse',
         'sys',
-        'termcolor'],
+        'termcolor',
+        'prompt-toolkit'],
     url="https://github.com/kyle-verhoog/sink"
     )
