@@ -2,3 +2,5 @@ oauth.py
 *~
 \#*#
 *.pyc
+*.swp
+*.swo
