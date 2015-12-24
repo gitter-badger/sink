@@ -82,7 +82,7 @@ class Sink(object):
         parser = argparse.ArgumentParser(
                 description="Display the current working directory")
 
-        print(coloured(self.curdir+"/", 'white'))
+        print(coloured(self.curdir + "/", 'white'))
 
     def ls(self):
         parser = argparse.ArgumentParser(
@@ -90,14 +90,16 @@ class Sink(object):
         parser.add_argument("dir", nargs="?", default=self.curdir)
         args = parser.parse_args(self.args[1:])
 
-        if not args.dir.startswith("/"): args.dir = "/" + args.dir
-        if args.dir == "/": args.dir = ""
+        args.dir = self.__sanitize_dir(args.dir)
 
-        for f in self.dropbox.files_list_folder(args.dir).entries:
-            if util.is_file(f):
-                print(coloured(f.name, 'white'))
-            else:
-                print(coloured(f.name, 'yellow'))
+        try:
+            for f in self.dropbox.files_list_folder(args.dir).entries:
+                if util.is_file(f):
+                    print(coloured(f.name, 'white'))
+                else:
+                    print(coloured(f.name, 'yellow'))
+        except dropbox.exceptions.ApiError as e:
+            print(coloured("ls: no such directory", "red"))
 
     def generate_completer(self):
         """Generates the autocompletion listing"""
@@ -113,7 +115,14 @@ class Sink(object):
                 description="Change the directory")
         parser.add_argument("dir", nargs="?", default="/")
         args = parser.parse_args(self.args[1:])
-        self.curdir = self.__sanitize_dir(args.dir)
+
+        new_dir = self.__sanitize_dir(args.dir)
+
+        try:
+            self.dropbox.files_list_folder(new_dir)
+            self.curdir = new_dir
+        except dropbox.exceptions.ApiError as e:
+            print(coloured("cd: no such directory", "red"))
 
     def repl(self):
         PROMPT = self.dropbox.users_get_current_account().email + " > "
