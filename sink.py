@@ -72,8 +72,17 @@ class Sink(object):
             return ""
 
         if not dir.startswith("/"):
-            return "/" + dir
+            dir = "/" + dir
 
+        if dir.endswith("/"):
+            dir = dir[:-1]
+        return dir
+
+    def cwd(self):
+        parser = argparse.ArgumentParser(
+                description="Display the current working directory")
+
+        print(coloured(self.curdir+"/", 'white'))
 
     def ls(self):
         parser = argparse.ArgumentParser(
@@ -92,7 +101,12 @@ class Sink(object):
 
     def generate_completer(self):
         """Generates the autocompletion listing"""
-        return word_completer(list(map(lambda x: x.name, self.dropbox.files_list_folder(self.curdir).entries)))
+        return word_completer(list(map(lambda x: x.name,
+            self.dropbox.files_list_folder(self.curdir).entries)))
+        # filter by directory
+        #return word_completer(map(lambda x: x.name,
+        #    filter(lambda x: not util.is_file(x),
+        #        self.dropbox.files_list_folder(self.curdir).entries)))
 
     def cd(self):
         parser = argparse.ArgumentParser(
@@ -122,6 +136,14 @@ class Sink(object):
 
     def upload(self, title, myfile):
         dropbox.files_upload(title, myfile)
+
+    def download(self):
+        parser = argparse.ArgumentParser(
+                description="Download a file to the directory specified")
+        parser.add_argument("file")
+        args = parser.parse_args(self.args[1:])
+        md, res = dropbox.files_download(args.file)
+
 
     def unload(self):
         self.conf_file = open(sh.join_paths(sh.get_home_dir(),'.sink'), "w+")
