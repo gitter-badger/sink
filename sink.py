@@ -99,7 +99,7 @@ class Sink(object):
                 else:
                     print(coloured(f.name, 'yellow'))
         except dropbox.exceptions.ApiError as e:
-            print(coloured("ls: no such directory", "red"))
+            print(coloured("sink ls: no such directory", "red"))
 
     def generate_completer(self):
         """Generates the autocompletion listing"""
@@ -122,7 +122,7 @@ class Sink(object):
             self.dropbox.files_list_folder(new_dir)
             self.curdir = new_dir
         except dropbox.exceptions.ApiError as e:
-            print(coloured("cd: no such directory", "red"))
+            print(coloured("sink cd: no such directory", "red"))
 
     def repl(self):
         PROMPT = self.dropbox.users_get_current_account().email + " > "
