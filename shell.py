@@ -16,6 +16,9 @@ def join_paths(first, second):
 def get_home_dir():
     return os.path.expanduser('~')
 
+def get_cwd():
+    return os.getcwd()
+
 def get_var(var, default):
     return os.getenv(var, default)
 

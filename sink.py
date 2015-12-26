@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
+import argparse
+import contextlib
 import dropbox
 import sys
+import time
 import shell as sh
-import argparse
 import util
+
 from oauth import OAUTH_TOKEN
 from termcolor import colored as coloured
 
@@ -78,6 +81,11 @@ class Sink(object):
             dir = dir[:-1]
         return dir
 
+    def __sanitize_file(self, file):
+        if not file.startswith("/"):
+            file = "/" + file
+        return file
+
     def cwd(self):
         parser = argparse.ArgumentParser(
                 description="Display the current working directory")
@@ -146,12 +154,32 @@ class Sink(object):
     def upload(self, title, myfile):
         dropbox.files_upload(title, myfile)
 
+    def down(self):
+        self.download()
+
     def download(self):
         parser = argparse.ArgumentParser(
                 description="Download a file to the directory specified")
         parser.add_argument("file")
+        parser.add_argument("dest", nargs="?", default=sh.get_cwd()+"/")
         args = parser.parse_args(self.args[1:])
-        md, res = dropbox.files_download(args.file)
+
+        with self.stopwatch('download'):
+            try:
+                self.dropbox.files_download_to_file(args.dest + args.file,
+                        self.__sanitize_file(args.file))
+            except dropbox.exceptions.HttpError as err:
+                print("sink download: could not download file")
+
+    @contextlib.contextmanager
+    def stopwatch(self, message):
+        """Context manager to print how long a block of code took."""
+        t0 = time.time()
+        try:
+            yield
+        finally:
+            t1 = time.time()
+            print('Total elapsed time for %s: %.3f' % (message, t1 - t0))
 
 
     def unload(self):
