@@ -41,7 +41,7 @@ class Sink(object):
     #dbx = Dropbox(access_token)
 
     def init_config(self):
-        self.conf_file = open(sh.join_paths(sh.get_home_dir(),'.sink'), "r+")
+        self.conf_file = open(sh.join_paths(sh.get_home_dir(), '.sink'), "r+")
         self.curdir = self.__sanitize_dir(self.conf_file.readline().rstrip())
         #self.curdir = sh.get_var(Sink.SINK_DIR, self.curdir)
         self.conf_file.close()
@@ -54,9 +54,8 @@ class Sink(object):
         self.init_config()
         self.init_args()
 
-        parser = argparse.ArgumentParser(
-                "Sink: for all your sinking needs",
-                usage="todo")
+        parser = argparse.ArgumentParser("Sink: for all your sinking needs",
+                                         usage="todo")
         parser.add_argument("command", help="subcommand")
 
         args = parser.parse_args(self.args[0:1])
@@ -88,13 +87,13 @@ class Sink(object):
 
     def cwd(self):
         parser = argparse.ArgumentParser(
-                description="Display the current working directory")
+            description="Display the current working directory")
 
         print(coloured(self.curdir + "/", 'white'))
 
     def ls(self):
         parser = argparse.ArgumentParser(
-                description="List files in the specified directory")
+            description="List files in the specified directory")
         parser.add_argument("dir", nargs="?", default=self.curdir)
         args = parser.parse_args(self.args[1:])
 
@@ -112,15 +111,15 @@ class Sink(object):
     def generate_completer(self):
         """Generates the autocompletion listing"""
         return word_completer(list(map(lambda x: x.name,
-            self.dropbox.files_list_folder(self.curdir).entries)))
+                                       self.dropbox.files_list_folder(
+                                           self.curdir).entries)))
         # filter by directory
         #return word_completer(map(lambda x: x.name,
         #    filter(lambda x: not util.is_file(x),
         #        self.dropbox.files_list_folder(self.curdir).entries)))
 
     def cd(self):
-        parser = argparse.ArgumentParser(
-                description="Change the directory")
+        parser = argparse.ArgumentParser(description="Change the directory")
         parser.add_argument("dir", nargs="?", default="/")
         args = parser.parse_args(self.args[1:])
 
@@ -134,17 +133,15 @@ class Sink(object):
 
     def repl(self):
         PROMPT = self.dropbox.users_get_current_account().email + " > "
-        parser = argparse.ArgumentParser(
-                description="Use the sink repl")
+        parser = argparse.ArgumentParser(description="Use the sink repl")
         parser.add_argument("command", help="subcommand")
 
         while True:
-            self.args = prompt(
-                    PROMPT,
-                    vi_mode=True,
-                    completer=self.generate_completer(),
-                    history=file_history(sh.join_paths(sh.get_home_dir(), '.sinkhist'))
-                    ).split(' ')
+            self.args = prompt(PROMPT,
+                               vi_mode=True,
+                               completer=self.generate_completer(),
+                               history=file_history(sh.join_paths(
+                                   sh.get_home_dir(), '.sinkhist'))).split(' ')
             args = parser.parse_args(self.args[0:1])
             if not hasattr(self, args.command):
                 print("Command not found")
@@ -159,15 +156,16 @@ class Sink(object):
 
     def download(self):
         parser = argparse.ArgumentParser(
-                description="Download a file to the directory specified")
+            description="Download a file to the directory specified")
         parser.add_argument("file")
-        parser.add_argument("dest", nargs="?", default=sh.get_cwd()+"/")
+        parser.add_argument("dest", nargs="?", default=sh.get_cwd() + "/")
         args = parser.parse_args(self.args[1:])
 
         with self.stopwatch('download'):
             try:
-                self.dropbox.files_download_to_file(args.dest + args.file,
-                        self.__sanitize_file(args.file))
+                self.dropbox.files_download_to_file(
+                    args.dest + args.file,
+                    self.__sanitize_file(self.curdir + "/" + args.file))
             except dropbox.exceptions.HttpError as err:
                 print("sink download: could not download file")
 
@@ -181,16 +179,15 @@ class Sink(object):
             t1 = time.time()
             print('Total elapsed time for %s: %.3f' % (message, t1 - t0))
 
-
     def unload(self):
-        self.conf_file = open(sh.join_paths(sh.get_home_dir(),'.sink'), "w+")
+        self.conf_file = open(sh.join_paths(sh.get_home_dir(), '.sink'), "w+")
         self.conf_file.write(self.curdir)
         #sh.set_var(Sink.SINK_DIR, self.curdir)
         self.conf_file.close()
-    
+
     def exit(self):
         exit()
 
+
 if __name__ == "__main__":
     Sink()
-
