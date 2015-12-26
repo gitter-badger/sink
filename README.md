@@ -1,8 +1,36 @@
 # sink
 sink things
 
+## Install
+Clone the repository
+`git clone https://github.com/kyle-verhoog/sink`
+
+then run the setup script
+`python setup.py`
 
 ## Development
+
+### Code Formatting
+
+#### Guidelines
+See https://www.python.org/dev/peps/pep-0008
+
+#### Code Formatter
+We use Google's [YAPF](https://github.com/google/yapf)
+
+
+To install, ensure `pip` is installed, then
+
+`pip install yapf`
+
+
+To apply the formatter to a file (in-place)
+
+`yapf -i --style="pep8" <file.py>`
+
+in order to not apply the formatter in-place and overwrite the file, do not include the `-i` option
+
+`yapf --style="pep8" <file.py>`
 
 ### Dependencies
 Requires the Dropbox API.
