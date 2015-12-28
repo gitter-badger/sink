@@ -42,7 +42,8 @@ class Sink(object):
 
     def init_config(self):
         self.conf_file = open(sh.join_paths(sh.get_home_dir(), '.sink'), "r+")
-        self.curdir = self.__sanitize_dir(self.conf_file.readline().rstrip())
+        self.curdir = util.directory(self.conf_file.readline().rstrip())
+        #self.curdir = self.__sanitize_dir(self.conf_file.readline().rstrip())
         #self.curdir = sh.get_var(Sink.SINK_DIR, self.curdir)
         self.conf_file.close()
 
@@ -66,7 +67,7 @@ class Sink(object):
             exit()
 
         getattr(self, args.command)()
-        self.unload()
+        self.__unload()
 
     def __sanitize_dir(self, dir):
         # dropbox api does not like '/' refering to root dir
@@ -86,15 +87,18 @@ class Sink(object):
         return file
 
     def cwd(self):
+        self.pwd()
+
+    def pwd(self):
         parser = argparse.ArgumentParser(
             description="Display the current working directory")
 
-        print(coloured(self.curdir + "/", 'white'))
+        print(coloured(self.curdir.get_dir(), 'white'))
 
     def ls(self):
         parser = argparse.ArgumentParser(
             description="List files in the specified directory")
-        parser.add_argument("dir", nargs="?", default=self.curdir)
+        parser.add_argument("dir", nargs="?", default=self.curdir.get_dir())
         args = parser.parse_args(self.args[1:])
 
         args.dir = self.__sanitize_dir(args.dir)
@@ -112,7 +116,7 @@ class Sink(object):
         """Generates the autocompletion listing"""
         return word_completer(list(map(lambda x: x.name,
                                        self.dropbox.files_list_folder(
-                                           self.curdir).entries)))
+                                           self.curdir.get_dir()).entries)))
         # filter by directory
         #return word_completer(map(lambda x: x.name,
         #    filter(lambda x: not util.is_file(x),
@@ -123,12 +127,13 @@ class Sink(object):
         parser.add_argument("dir", nargs="?", default="/")
         args = parser.parse_args(self.args[1:])
 
-        new_dir = self.__sanitize_dir(args.dir)
+        old_dir = self.curdir.get_directory()
+        self.curdir.change_directory(args.dir)
 
         try:
-            self.dropbox.files_list_folder(new_dir)
-            self.curdir = new_dir
+            self.dropbox.files_list_folder(self.curdir.get_dir())
         except dropbox.exceptions.ApiError as e:
+            self.curdir = util.directory(old_dir)
             print(coloured("sink cd: no such directory", "red"))
 
     def repl(self):
@@ -167,7 +172,9 @@ class Sink(object):
                     args.dest + args.file,
                     self.__sanitize_file(self.curdir + "/" + args.file))
             except dropbox.exceptions.HttpError as err:
-                print("sink download: could not download file")
+                print(coloured("sink download: could not download file", "red"))
+            except dropbox.exceptions.ApiError as err:
+                print(coloured("sink download: no such file", "red"))
 
     @contextlib.contextmanager
     def stopwatch(self, message):
@@ -179,7 +186,7 @@ class Sink(object):
             t1 = time.time()
             print('Total elapsed time for %s: %.3f' % (message, t1 - t0))
 
-    def unload(self):
+    def __unload(self):
         self.conf_file = open(sh.join_paths(sh.get_home_dir(), '.sink'), "w+")
         self.conf_file.write(self.curdir)
         #sh.set_var(Sink.SINK_DIR, self.curdir)
