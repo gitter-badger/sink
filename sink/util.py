@@ -1,18 +1,23 @@
+import os
+"""Provides utilities for dropbox and other misc. things"""
+
+
 def is_file(file):
-    """Returns true if the given item is file"""
+    """Returns true if the given item is dropbox file"""
     return hasattr(file, 'size')
 
-import os
 
 class directory(object):
+    """Represents a directory in the user's dropbox"""
+
     def __init__(self, dir):
         self.dir = self.normalize_dir(dir)
 
     def normalize_dir(self, dir):
         if not dir.startswith('/'):
             dir = '/' + dir
-        dir = os.path.normpath(dir) 
-        
+        dir = os.path.normpath(dir)
+
         if not dir.endswith('/'):
             dir = dir + '/'
 
@@ -34,13 +39,29 @@ class directory(object):
 
     def is_valid_directory(self, dir):
         """Checks to see if a given directory is valid"""
+        return os.path.exists(dir)
 
 
 class file_path(object):
-    def __init__(self, path):
-        self.path = path
+    """Represents a file in the users dropbox, or on their machine"""
 
-    def get_location(self):
+    def __init__(self, path, filename):
+        self.path = self.normalize_file(self.normalize_path(path) + filename)
+
+    def normalize_path(self, path):
+        if not path.startswith('/'):
+            path = '/' + path
+        path = os.path.normpath(path)
+
+        if not path.endswith('/'):
+            path = path + '/'
+
+        return path
+
+    def normalize_file(self, file):
+        return os.path.normpath(file)
+
+    def get_dir_name(self):
         """Returns the path of the directory the file is in"""
         return os.path.dirname(self.path)
 
@@ -51,5 +72,3 @@ class file_path(object):
     def get_filename(self):
         """Returns the name of the file"""
         return os.path.basename(self.path)
-
-

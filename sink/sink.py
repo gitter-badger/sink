@@ -160,19 +160,36 @@ class Sink(object):
         self.download()
 
     def download(self):
+        """Downloads a file from the user's dropbox"""
+        cwd = sh.get_cwd() + "/"
         parser = argparse.ArgumentParser(
             description="Download a file to the directory specified")
         parser.add_argument("file")
-        parser.add_argument("dest", nargs="?", default=sh.get_cwd() + "/")
+        parser.add_argument("dest", nargs="?", default=cwd)
         args = parser.parse_args(self.args[1:])
 
         with self.stopwatch('download'):
             try:
-                self.dropbox.files_download_to_file(
-                    args.dest + args.file,
-                    self.__sanitize_file(self.curdir + "/" + args.file))
+                dbfile = util.file_path(self.curdir.get_directory(), args.file)
+                destfile = util.file_path(args.dest, args.file)
+
+                # user has specified local directory to save
+                if not args.dest == cwd:
+                    self.dropbox.files_download_to_file(
+                        destfile.get_full_path(), dbfile.get_full_path())
+                    print(coloured("file (" + dbfile.get_full_path(
+                    ) + ") saved locally to " + destfile.get_full_path(),
+                                   'green'))
+                else:  # default to pwd of where sink was run
+                    self.dropbox.files_download_to_file(
+                        destfile.get_filename(), dbfile.get_full_path())
+                    print(coloured("file (" + dbfile.get_full_path(
+                    ) + ") saved locally to current directory " +
+                                   destfile.get_full_path(), 'green'))
+
             except dropbox.exceptions.HttpError as err:
-                print(coloured("sink download: could not download file", "red"))
+                print(coloured("sink download: could not download file",
+                               "red"))
             except dropbox.exceptions.ApiError as err:
                 print(coloured("sink download: no such file", "red"))
 
