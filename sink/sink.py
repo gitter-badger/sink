@@ -206,7 +206,7 @@ class Sink(object):
         try:
             sh.sh(self.args[1:])
         except:
-            print(coloured("shell command not found: " + self.args[1], "red"))
+            print(coloured("shell command not found", "red"))
 
     @contextlib.contextmanager
     def stopwatch(self, message):
@@ -217,6 +217,29 @@ class Sink(object):
         finally:
             t1 = time.time()
             print('Total elapsed time for %s: %.3f' % (message, t1 - t0))
+
+    def upload(self):
+        """Uploads a file to the user's dropbox"""
+        cwd = sh.get_cwd() + "/"
+        parser = argparse.ArgumentParser(description="Uploads file to dropbox")
+        parser.add_argument("--overwrite", action="store_true")
+        parser.add_argument("file")
+        parser.add_argument("path")
+        args = parser.parse_args(self.args[1:])
+        mode = (dropbox.files.WriteMode.overwrite
+                if args.overwrite else dropbox.files.WriteMode.add)
+        try:
+            local_file = util.file_path(cwd, args.file)
+            dbx_file = util.file_path(args.path, args.file)
+
+            with open(local_file.get_full_path(), "rb") as f:
+                data = f.read()
+
+            res = self.dropbox.files_upload(data, dbx_file.get_full_path())
+            print(coloured("file " + local_file.get_filename(
+            ) + " uploaded to " + dbx_file.get_full_path(), "green"))
+        except dropbox.exceptions.ApiError as e:
+            print(coloured("sink upload: could not upload file", "red"))
 
     def __unload(self):
         self.conf_file = open(sh.join_paths(sh.get_home_dir(), '.sink'), "w+")
