@@ -2,7 +2,7 @@
 
 import os
 import shutil
-from subprocess import call
+from subprocess import call, Popen
 '''
     Module to provide shell-like commands
 '''
@@ -30,3 +30,8 @@ def get_var(var, default):
 
 def set_var(var, val):
     os.environ[var] = val
+
+
+def sh(args):
+    call(args)
+    #return Popen(args)

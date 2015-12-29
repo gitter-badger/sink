@@ -69,7 +69,7 @@ class Sink(object):
         getattr(self, args.command)()
         self.__unload()
 
-    def __sanitize_dir(self, dir):
+    def __normalize_dir(self, dir):
         # dropbox api does not like '/' refering to root dir
         if dir == "/" or dir == "":
             return ""
@@ -81,7 +81,7 @@ class Sink(object):
             dir = dir[:-1]
         return dir
 
-    def __sanitize_file(self, file):
+    def __normalize_file(self, file):
         if not file.startswith("/"):
             file = "/" + file
         return file
@@ -101,7 +101,7 @@ class Sink(object):
         parser.add_argument("dir", nargs="?", default=self.curdir.get_dir())
         args = parser.parse_args(self.args[1:])
 
-        args.dir = self.__sanitize_dir(args.dir)
+        args.dir = self.__normalize_dir(args.dir)
 
         try:
             for f in self.dropbox.files_list_folder(args.dir).entries:
@@ -193,6 +193,21 @@ class Sink(object):
             except dropbox.exceptions.ApiError as err:
                 print(coloured("sink download: no such file", "red"))
 
+    def exec(self):
+        self.execute()
+
+    def execute(self):
+        """Executes an external shell command"""
+        cwd = sh.get_cwd() + "/"
+        parser = argparse.ArgumentParser(
+            description="Executes an external shell command")
+        parser.add_argument("cmd")
+
+        try:
+            sh.sh(self.args[1:])
+        except:
+            print(coloured("shell command not found: " + self.args[1], "red"))
+
     @contextlib.contextmanager
     def stopwatch(self, message):
         """Context manager to print how long a block of code took."""
@@ -205,7 +220,7 @@ class Sink(object):
 
     def __unload(self):
         self.conf_file = open(sh.join_paths(sh.get_home_dir(), '.sink'), "w+")
-        self.conf_file.write(self.curdir)
+        self.conf_file.write(self.curdir.get_directory())
         #sh.set_var(Sink.SINK_DIR, self.curdir)
         self.conf_file.close()
 
