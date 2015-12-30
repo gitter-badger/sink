@@ -41,7 +41,10 @@ class directory(object):
 
     def change_directory(self, newdir):
         """Sets the current directory to directory given"""
-        self.dir = self.normalize_dir(self.dir + newdir)
+        if newdir == '/' or newdir == ' ' or newdir == '':
+            self.dir = '/'
+        else:
+            self.dir = self.normalize_dir(self.dir + newdir)
 
     def is_valid_directory(self, dir):
         """Checks to see if a given directory is valid"""
