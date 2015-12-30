@@ -243,6 +243,29 @@ class Sink(object):
         except dropbox.exceptions.ApiError as e:
             print_error("sink upload: could not upload file")
 
+    def share(self):
+        """Uploads a file to the users dropbox and prints a public link"""
+        cwd = sh.get_cwd() + "/"
+        parser = argparse.ArgumentParser(
+            description="Uploads file to dropbox and returns a public link")
+        parser.add_argument("--overwrite", action="store_true")
+        parser.add_argument("file")
+        args = parser.parse_args(self.args[1:])
+
+        mode = (dropbox.files.WriteMode.overwrite
+                if args.overwrite else dropbox.files.WriteMode.add)
+
+        try:
+            local_file = util.file_path(cwd, args.file)
+            dbx_file = util.file_path("/.sink/share/", args.file)
+
+            with open(local_file.get_full_path(), "rb") as f:
+                data = f.read()
+            res = self.dropbox.files_upload(data, dbx_file.get_full_path())
+            print_succ("sink share: %s" % (self.dropbox.sharing_create_shared_link(dbx_file.get_full_path(), short_url=True).url))
+        except dropbox.exceptions.ApiError as e:
+            print_error("sink share: could not share file")
+
     def __unload(self):
         self.conf_file = open(sh.join_paths(sh.get_home_dir(), '.sink'), "w+")
         self.conf_file.write(self.curdir.get_directory())
