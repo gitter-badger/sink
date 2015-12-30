@@ -113,7 +113,7 @@ class Sink(object):
                 else:
                     print(coloured(f.name, 'yellow'))
         except dropbox.exceptions.ApiError as e:
-            print(coloured("sink ls: no such directory", "red"))
+            print_error("sink ls: no such directory")
 
     def generate_completer(self):
         """Generates the autocompletion listing"""
@@ -137,7 +137,7 @@ class Sink(object):
             self.dropbox.files_list_folder(self.curdir.get_dir())
         except dropbox.exceptions.ApiError as e:
             self.curdir = util.directory(old_dir)
-            print(coloured("sink cd: no such directory", "red"))
+            print_error("sink cd: no such directory")
 
     def repl(self):
         PROMPT = self.dropbox.users_get_current_account().email + " > "
@@ -180,21 +180,19 @@ class Sink(object):
                 if not args.dest == cwd:
                     self.dropbox.files_download_to_file(
                         destfile.get_full_path(), dbfile.get_full_path())
-                    print(coloured("file (" + dbfile.get_full_path(
-                    ) + ") saved locally to " + destfile.get_full_path(),
-                                   'green'))
+                    print_succ("file (%s) saved locally to %s " % (
+                        dbfile.get_full_path(), destfile.get_full_path()))
                 else:  # default to pwd of where sink was run
                     self.dropbox.files_download_to_file(
                         destfile.get_filename(), dbfile.get_full_path())
-                    print(coloured("file (" + dbfile.get_full_path(
-                    ) + ") saved locally to current directory " +
-                                   destfile.get_full_path(), 'green'))
+                    print_succ(
+                        "file (%s) saved locally to current directory %s" %
+                        (dbfile.get_full_path(), destfile.get_full_path()))
 
             except dropbox.exceptions.HttpError as err:
-                print(coloured("sink download: could not download file",
-                               "red"))
+                print_error("sink download: could not download file")
             except dropbox.exceptions.ApiError as err:
-                print(coloured("sink download: no such file", "red"))
+                print_error("sink download: no such file")
 
     def exec(self):
         self.execute()
@@ -229,8 +227,8 @@ class Sink(object):
         parser.add_argument("file")
         parser.add_argument("path")
         args = parser.parse_args(self.args[1:])
-        mode = (dropbox.files.WriteMode.overwrite
-                if args.overwrite else dropbox.files.WriteMode.add)
+        mode = (dropbox.files.WriteMode.overwrite if args.overwrite else
+                dropbox.files.WriteMode.add)
         try:
             local_file = util.file_path(cwd, args.file)
             dbx_file = util.file_path(args.path, args.file)
@@ -239,7 +237,8 @@ class Sink(object):
                 data = f.read()
 
             res = self.dropbox.files_upload(data, dbx_file.get_full_path())
-            print_succ("file %s uploaded to %s" % (local_file.get_filename(), dbx_file.get_full_path()))
+            print_succ("file %s uploaded to %s" %
+                       (local_file.get_filename(), dbx_file.get_full_path()))
         except dropbox.exceptions.ApiError as e:
             print_error("sink upload: could not upload file")
 
@@ -252,8 +251,8 @@ class Sink(object):
         parser.add_argument("file")
         args = parser.parse_args(self.args[1:])
 
-        mode = (dropbox.files.WriteMode.overwrite
-                if args.overwrite else dropbox.files.WriteMode.add)
+        mode = (dropbox.files.WriteMode.overwrite if args.overwrite else
+                dropbox.files.WriteMode.add)
 
         try:
             local_file = util.file_path(cwd, args.file)
@@ -262,7 +261,10 @@ class Sink(object):
             with open(local_file.get_full_path(), "rb") as f:
                 data = f.read()
             res = self.dropbox.files_upload(data, dbx_file.get_full_path())
-            print_succ("sink share: %s" % (self.dropbox.sharing_create_shared_link(dbx_file.get_full_path(), short_url=True).url))
+            print_succ("sink share: %s" %
+                       (self.dropbox.sharing_create_shared_link(
+                           dbx_file.get_full_path(),
+                           short_url=True).url))
         except dropbox.exceptions.ApiError as e:
             print_error("sink share: could not share file")
 

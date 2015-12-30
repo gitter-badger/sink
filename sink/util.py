@@ -7,11 +7,14 @@ def is_file(file):
     """Returns true if the given item is dropbox file"""
     return hasattr(file, 'size')
 
+
 def print_error(msg):
     print(coloured(msg, 'red'))
 
+
 def print_succ(msg):
     print(coloured(msg, 'green'))
+
 
 class directory(object):
     """Represents a directory in the user's dropbox"""
