@@ -11,6 +11,9 @@ import util
 from oauth import OAUTH_TOKEN
 from termcolor import colored as coloured
 
+from util import print_error
+from util import print_succ
+
 from prompt_toolkit import prompt
 from prompt_toolkit.contrib.completers import WordCompleter as word_completer
 from prompt_toolkit.history import FileHistory as file_history
@@ -236,10 +239,9 @@ class Sink(object):
                 data = f.read()
 
             res = self.dropbox.files_upload(data, dbx_file.get_full_path())
-            print(coloured("file " + local_file.get_filename(
-            ) + " uploaded to " + dbx_file.get_full_path(), "green"))
+            print_succ("file %s uploaded to %s" % (local_file.get_filename(), dbx_file.get_full_path()))
         except dropbox.exceptions.ApiError as e:
-            print(coloured("sink upload: could not upload file", "red"))
+            print_error("sink upload: could not upload file")
 
     def __unload(self):
         self.conf_file = open(sh.join_paths(sh.get_home_dir(), '.sink'), "w+")
