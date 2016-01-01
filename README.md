@@ -1,4 +1,6 @@
 # sink
+
+[![Join the chat at https://gitter.im/Kyle-Verhoog/sink](https://badges.gitter.im/Kyle-Verhoog/sink.svg)](https://gitter.im/Kyle-Verhoog/sink?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 sink things
 
 ## Install
