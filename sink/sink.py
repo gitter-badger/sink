@@ -268,6 +268,15 @@ class Sink(object):
         except dropbox.exceptions.ApiError as e:
             print_error("sink share: could not share file")
 
+
+    def clear(self):
+        """Clears the console"""
+        cwd = sh.get_cwd() + "/"
+        parser = argparse.ArgumentParser(description="Clear the console")
+
+        # this is how most terminals `clear`
+        print(chr(27) + "[2J")
+
     def __unload(self):
         self.conf_file = open(sh.join_paths(sh.get_home_dir(), '.sink'), "w+")
         self.conf_file.write(self.curdir.get_directory())
