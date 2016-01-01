@@ -6,6 +6,6 @@ setup(name="sink",
       platforms=['Linux'],
       packages=find_packages(),
       install_requires=[
-          'dropbox', 'shell', 'argparse', 'sys', 'termcolor', 'prompt-toolkit'
+          'dropbox', 'argparse', 'termcolor', 'prompt-toolkit'
       ],
       url="https://github.com/kyle-verhoog/sink")
